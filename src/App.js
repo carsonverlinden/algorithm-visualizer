@@ -1,5 +1,5 @@
 import './App.css';
-import AlgorithmVisualizer from '../../AlgorithmVisualizer.js';
+import AlgorithmVisualizer from './AlgorithmVisualizer.js';
 
 function App() {
   return (
