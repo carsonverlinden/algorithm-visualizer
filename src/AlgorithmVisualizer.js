@@ -1,18 +1,37 @@
 import React, { useState } from 'react';
 import './App.css';
 
+
 const algorithms = [
 	{ value: 'bubble', label: 'Bubble Sort' },
 	{ value: 'quick', label: 'Quick Sort' },
 	{ value: 'bst', label: 'Binary Search Tree' },
 ];
 
+const dataTypes = [
+	{ value: 'int', label: 'Integer' },
+	{ value: 'double', label: 'Double' },
+	{ value: 'string', label: 'String' },
+	{ value: 'char', label: 'Char' },
+];
+
+
 function AlgorithmVisualizer() {
 	const [selectedAlgorithm, setSelectedAlgorithm] = useState(algorithms[0].value);
+	const [selectedType, setSelectedType] = useState(dataTypes[0].value);
 	const [data, setData] = useState([5, 3, 8, 1, 2]);
 	const [customInput, setCustomInput] = useState('5,3,8,1,2');
 	const [step, setStep] = useState(0);
 	const [steps, setSteps] = useState([]);
+
+
+	function compare(a, b) {
+		if (selectedType === 'int' || selectedType === 'double') {
+			return a > b;
+		} else {
+			return String(a) > String(b);
+		}
+	}
 
 	function getBubbleSortSteps(arr) {
 		const steps = [];
@@ -20,7 +39,7 @@ function AlgorithmVisualizer() {
 		steps.push([...a]);
 		for (let i = 0; i < a.length; i++) {
 			for (let j = 0; j < a.length - i - 1; j++) {
-				if (a[j] > a[j + 1]) {
+				if (compare(a[j], a[j + 1])) {
 					[a[j], a[j + 1]] = [a[j + 1], a[j]];
 					steps.push([...a]);
 				}
@@ -28,6 +47,7 @@ function AlgorithmVisualizer() {
 		}
 		return steps;
 	}
+
 
 	function getQuickSortSteps(arr) {
 		const steps = [];
@@ -44,7 +64,7 @@ function AlgorithmVisualizer() {
 			const pivot = a[high];
 			let i = low;
 			for (let j = low; j < high; j++) {
-				if (a[j] < pivot) {
+				if (!compare(pivot, a[j])) {
 					[a[i], a[j]] = [a[j], a[i]];
 					steps.push([...a]);
 					i++;
@@ -58,6 +78,7 @@ function AlgorithmVisualizer() {
 		return steps;
 	}
 
+
 	function getBSTSteps(arr) {
 		function TreeNode(val) {
 			this.val = val;
@@ -66,7 +87,7 @@ function AlgorithmVisualizer() {
 		}
 		function insert(root, val) {
 			if (!root) return new TreeNode(val);
-			if (val < root.val) root.left = insert(root.left, val);
+			if (compare(root.val, val)) root.left = insert(root.left, val);
 			else root.right = insert(root.right, val);
 			return root;
 		}
@@ -86,6 +107,7 @@ function AlgorithmVisualizer() {
 		return steps.length ? steps : [arr];
 	}
 
+
 	const runAlgorithm = () => {
 		let generatedSteps = [];
 		if (selectedAlgorithm === 'bubble') {
@@ -99,10 +121,26 @@ function AlgorithmVisualizer() {
 		setStep(0);
 	};
 
+
 	const handleInputChange = (e) => {
 		setCustomInput(e.target.value);
-		const arr = e.target.value.split(',').map(Number).filter(n => !isNaN(n));
+		let arr = e.target.value.split(',').map(s => s.trim()).filter(s => s.length > 0);
+		if (selectedType === 'int') {
+			arr = arr.map(v => parseInt(v, 10)).filter(n => !isNaN(n));
+		} else if (selectedType === 'double') {
+			arr = arr.map(v => parseFloat(v)).filter(n => !isNaN(n));
+		} else if (selectedType === 'char') {
+			arr = arr.map(v => v.length > 0 ? v[0] : '').filter(c => c !== '');
+		}
 		setData(arr);
+	};
+
+	const handleTypeChange = (e) => {
+		setSelectedType(e.target.value);
+		// Re-parse input for new type
+		handleInputChange({ target: { value: customInput } });
+		setSteps([]);
+		setStep(0);
 	};
 
 	const handleAlgorithmChange = (e) => {
@@ -118,39 +156,52 @@ function AlgorithmVisualizer() {
 		if (step > 0) setStep(step - 1);
 	};
 
-	return (
-		<div className="visualizer-container">
-			<h1>Algorithm Visualizer</h1>
-			<div className="controls">
-				<label>
-					Algorithm:
-					<select value={selectedAlgorithm} onChange={handleAlgorithmChange}>
-						{algorithms.map(algo => (
-							<option key={algo.value} value={algo.value}>{algo.label}</option>
+
+
+		return (
+			<main className="visualizer-container">
+				<header className="visualizer-header">
+					<h1>Algorithm Visualizer</h1>
+					<p className="subtitle">Explore and visualize sorting and searching algorithms interactively.</p>
+				</header>
+				<section className="controls">
+					<div className="control-group">
+						<label htmlFor="algorithm-select">Algorithm</label>
+						<select id="algorithm-select" value={selectedAlgorithm} onChange={handleAlgorithmChange}>
+							{algorithms.map(algo => (
+								<option key={algo.value} value={algo.value}>{algo.label}</option>
+							))}
+						</select>
+					</div>
+					<div className="control-group">
+						<label htmlFor="type-select">Data Type</label>
+						<select id="type-select" value={selectedType} onChange={handleTypeChange}>
+							{dataTypes.map(type => (
+								<option key={type.value} value={type.value}>{type.label}</option>
+							))}
+						</select>
+					</div>
+					<div className="control-group">
+						<label htmlFor="data-input">Data (comma separated)</label>
+						<input id="data-input" type="text" value={customInput} onChange={handleInputChange} placeholder="e.g. 5,3,8,1,2" />
+					</div>
+					<button className="visualize-btn" onClick={runAlgorithm}>Visualize</button>
+				</section>
+				<section className="visualization">
+					<h2 className="vis-title">Visualization</h2>
+					<ul className="data-list">
+						{(steps[step] || data).map((num, idx) => (
+							<li key={idx} className="data-item">{String(num)}</li>
 						))}
-					</select>
-				</label>
-				<label>
-					Data (comma separated):
-					<input type="text" value={customInput} onChange={handleInputChange} />
-				</label>
-				<button onClick={runAlgorithm}>Visualize</button>
-			</div>
-			<div className="visualization">
-				{/* Visualization area */}
-				<ul className="data-list">
-					{(steps[step] || data).map((num, idx) => (
-						<li key={idx} className="data-item">{num}</li>
-					))}
-				</ul>
-			</div>
-			<div className="step-controls">
-				<button onClick={prevStep} disabled={step === 0}>Previous</button>
-				<span>Step {step + 1} / {steps.length || 1}</span>
-				<button onClick={nextStep} disabled={step >= steps.length - 1}>Next</button>
-			</div>
-		</div>
-	);
+					</ul>
+				</section>
+				<nav className="step-controls">
+					<button className="step-btn" onClick={prevStep} disabled={step === 0}>Previous</button>
+					<span className="step-indicator">Step {step + 1} / {steps.length || 1}</span>
+					<button className="step-btn" onClick={nextStep} disabled={step >= steps.length - 1}>Next</button>
+				</nav>
+			</main>
+		);
 }
 
 export default AlgorithmVisualizer;
