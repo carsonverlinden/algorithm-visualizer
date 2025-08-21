@@ -1,6 +1,6 @@
 
 body {
-  background: linear-gradient(135deg, #e0eafc 0%, #cfdef3 100%);
+  background: #D5ECD4;
   font-family: 'Segoe UI', 'Roboto', 'Arial', sans-serif;
   margin: 0;
   padding: 0;
@@ -9,7 +9,7 @@ body {
 .visualizer-container {
   max-width: 600px;
   margin: 40px auto;
-  background: #fff;
+  background: #A1B0AB;
   border-radius: 18px;
   box-shadow: 0 4px 24px rgba(0,0,0,0.08);
   padding: 32px 28px 24px 28px;
@@ -25,10 +25,10 @@ body {
 .visualizer-header h1 {
   font-size: 2.5rem;
   margin-bottom: 0.5rem;
-  color: #2d3a4b;
+  color: #6b6054;
 }
 .subtitle {
-  color: #6c7a89;
+  color: #6b6054;
   font-size: 1.1rem;
   margin-bottom: 0;
 }
@@ -47,7 +47,7 @@ body {
 }
 .control-group label {
   font-weight: 500;
-  color: #3a4a5d;
+  color: #6b6054;
 }
 .control-group input,
 .control-group select {
@@ -65,7 +65,7 @@ body {
 }
 .visualize-btn {
   padding: 10px 22px;
-  background: linear-gradient(90deg, #6c63ff 0%, #48c6ef 100%);
+  background: #929487;
   color: #fff;
   border: none;
   border-radius: 8px;
@@ -76,19 +76,19 @@ body {
   transition: background 0.2s, box-shadow 0.2s;
 }
 .visualize-btn:hover {
-  background: linear-gradient(90deg, #48c6ef 0%, #6c63ff 100%);
-  box-shadow: 0 4px 16px rgba(76, 110, 245, 0.12);
+  background: #cfd8dc;
+  box-shadow: 0 4px 16px rgba(164, 167, 182, 0.12);
 }
 
 .visualization {
-  background: #f7fafc;
+  background: #c3dac3;
   border-radius: 12px;
   padding: 18px 0 10px 0;
   box-shadow: 0 2px 8px rgba(44, 62, 80, 0.04);
 }
 .vis-title {
   text-align: center;
-  color: #3a4a5d;
+  color: #929487;
   font-size: 1.3rem;
   margin-bottom: 12px;
 }
@@ -102,13 +102,13 @@ body {
   list-style: none;
 }
 .data-item {
-  background: linear-gradient(90deg, #6c63ff 0%, #48c6ef 100%);
+  background: #929487;
   color: #fff;
   font-size: 1.15rem;
   font-weight: 500;
   padding: 12px 18px;
   border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(76, 110, 245, 0.10);
+  box-shadow: 0 2px 8px rgba(156, 156, 156, 0.1);
   transition: transform 0.15s, box-shadow 0.15s;
 }
 .data-item:hover {
@@ -125,7 +125,7 @@ body {
 }
 .step-btn {
   padding: 8px 18px;
-  background: #6c63ff;
+  background: #929487;
   color: #fff;
   border: none;
   border-radius: 6px;
@@ -136,14 +136,27 @@ body {
 }
 .step-btn:disabled {
   background: #cfd8dc;
-  color: #6c7a89;
+  color: #6b6054;
   cursor: not-allowed;
 }
 .step-btn:not(:disabled):hover {
-  background: #48c6ef;
+  background: #cbd8dc;
 }
 .step-indicator {
   font-size: 1.1rem;
-  color: #3a4a5d;
+  color: #6b6054;
+  font-weight: 500;
+}
+
+.arrow {
+    font-size: 1.5em;
+    vertical-align: middle;
+}
+.bst-node {
+    text-align: center;
+}
+
+.search-step-label {
+  color: #6b6054;
   font-weight: 500;
 }
