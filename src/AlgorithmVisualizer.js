@@ -33,7 +33,6 @@ function AlgorithmVisualizer() {
         }
     }
 
-    // Bubble Sort with highlights
     function getBubbleSortSteps(arr) {
         const steps = [];
         const a = [...arr];
@@ -51,7 +50,6 @@ function AlgorithmVisualizer() {
         return steps;
     }
 
-    // Quick Sort with highlights
     function getQuickSortSteps(arr) {
         const steps = [];
         const a = [...arr];
@@ -82,7 +80,6 @@ function AlgorithmVisualizer() {
         return steps;
     }
 
-    // BST construction and inorder traversal (for visualization)
     function getBSTSteps(arr) {
         function TreeNode(val) {
             this.val = val;
@@ -151,7 +148,6 @@ function AlgorithmVisualizer() {
 }
 
 function BSTSVG({ root, highlight, width = 600, height = 400 }) {
-    // Count nodes and depth for scaling
     function getDepth(node) {
         if (!node) return 0;
         return 1 + Math.max(getDepth(node.left), getDepth(node.right));
@@ -159,22 +155,18 @@ function BSTSVG({ root, highlight, width = 600, height = 400 }) {
     const nodeCount = root ? countNodes(root) : 0;
     const treeDepth = root ? getDepth(root) : 0;
 
-    // Dynamic node radius based on node count and depth
-    // Minimum radius 8, maximum 24
     let nodeRadius = 24;
     if (nodeCount > 15 || treeDepth > 5) {
-        // Shrink more for very large trees
         nodeRadius = Math.max(8, 200 / Math.max(nodeCount, treeDepth * 2));
     } else if (nodeCount > 7 || treeDepth > 3) {
         nodeRadius = Math.max(12, 300 / Math.max(nodeCount, treeDepth * 2));
     }
 
-    // Compute layout with new nodeRadius
     const layout = computeTreeLayout(root, width, height, nodeRadius);
 
     return (
         <svg width={width} height={height} style={{background: '#c3dac3' }}>
-            {/* Edges */}
+            {}
             {layout.map((n, idx) =>
                 n.parent ? (
                     <line
@@ -188,7 +180,7 @@ function BSTSVG({ root, highlight, width = 600, height = 400 }) {
                     />
                 ) : null
             )}
-            {/* Nodes */}
+            {}
             {layout.map((n, idx) => (
                 <g key={'node-' + idx}>
                     <circle
@@ -342,7 +334,7 @@ function getBSTSearchSteps(root, value) {
                 <p className="subtitle">Let's get this shit sorted out.</p>
             </header>
             <section className="controls">
-                {/* ...existing controls... */}
+                {}
                 <div className="control-group">
                     <label htmlFor="algorithm-select">Algorithm</label>
                     <select id="algorithm-select" value={selectedAlgorithm} onChange={handleAlgorithmChange}>
