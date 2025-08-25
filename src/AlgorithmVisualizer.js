@@ -9,107 +9,457 @@ const algorithms = [
 
 const dataTypes = [
     { value: 'int', label: 'Integer' },
-    { value: 'double', label: 'Double' },
+    { value: 'double', label: 'Float' },
     { value: 'string', label: 'String' },
     { value: 'char', label: 'Char' },
 ];
 
+function compare(a, b) {
+    // Handles int, float, string, char
+    if (typeof a === 'number' && typeof b === 'number') {
+        return a > b;
+    }
+    return String(a) > String(b);
+}
+
+// Bubble Sort with preview logic
+function getBubbleSortStepsWithPreview(arr) {
+    const steps = [];
+    const a = [...arr];
+    steps.push({ array: [...a], highlights: [] });
+    for (let i = 0; i < a.length - 1; i++) {
+        for (let j = 0; j < a.length - i - 1; j++) {
+            if (compare(a[j], a[j + 1])) {
+                // Preview only if a swap will happen
+                steps.push({ array: [...a], highlights: [j, j + 1], preview: true });
+                // Actual move step: swap
+                [a[j], a[j + 1]] = [a[j + 1], a[j]];
+                steps.push({ array: [...a], highlights: [], preview: false });
+            }
+        }
+    }
+    return steps;
+}
+
+// Quick Sort with preview logic
+function getQuickSortStepsWithPreview(arr) {
+    const steps = [];
+    const a = [...arr];
+    steps.push({ array: [...a], highlights: [] });
+    function quickSort(low, high) {
+        if (low < high) {
+            const pi = partition(low, high);
+            quickSort(low, pi - 1);
+            quickSort(pi + 1, high);
+        }
+    }
+    function partition(low, high) {
+        let pivot = a[high];
+        let i = low - 1;
+        for (let j = low; j < high; j++) {
+            if (!compare(a[j], pivot)) {
+                // Only preview if a swap will happen
+                steps.push({
+                    array: [...a],
+                    highlights: [j, high],
+                    preview: true,
+                    pivotIndex: high,
+                    swapDirection: 'left'
+                });
+                i++;
+                [a[i], a[j]] = [a[j], a[i]];
+                steps.push({ array: [...a], highlights: [], preview: false });
+            }
+            // No preview for comparisons where no swap occurs
+        }
+        // Final pivot swap preview (if needed)
+        if (i + 1 !== high && a[i + 1] !== a[high]) {
+            steps.push({
+                array: [...a],
+                highlights: [i + 1, high],
+                preview: true,
+                pivotIndex: high,
+                swapDirection: 'left'
+            });
+            [a[i + 1], a[high]] = [a[high], a[i + 1]];
+            steps.push({ array: [...a], highlights: [], preview: false });
+        } else {
+            // No preview for unnecessary pivot swaps
+            steps.push({ array: [...a], highlights: [], preview: false });
+        }
+        return i + 1;
+    }
+    quickSort(0, a.length - 1);
+    return steps;
+}
+
+
+function getBSTSteps(arr, setBstRoot) {
+    function TreeNode(val) {
+        this.val = val;
+        this.left = null;
+        this.right = null;
+    }
+    function insert(root, val) {
+        if (!root) return new TreeNode(val);
+        if (compare(root.val, val)) root.left = insert(root.left, val);
+        else root.right = insert(root.right, val);
+        return root;
+    }
+    let root = null;
+    arr.forEach(val => {
+        root = insert(root, val);
+    });
+    setBstRoot(root);
+    const steps = [];
+    function inorder(node, visited) {
+        if (!node) return;
+        inorder(node.left, visited);
+        visited.push(node.val);
+        steps.push({ array: [...visited], highlights: [node.val] });
+        inorder(node.right, visited);
+    }
+    inorder(root, []);
+    return steps.length ? steps : [{ array: arr, highlights: [] }];
+}
+
 function AlgorithmVisualizer() {
-    const [selectedAlgorithm, setSelectedAlgorithm] = useState(algorithms[0].value);
-    const [selectedType, setSelectedType] = useState(dataTypes[0].value);
-    const [data, setData] = useState([5, 3, 8, 1, 2]);
-    const [customInput, setCustomInput] = useState('5,3,8,1,2');
-    const [step, setStep] = useState(0);
+    const [selectedAlgorithm, setSelectedAlgorithm] = useState('bubble');
+    const [selectedType, setSelectedType] = useState('int');
+    const [customInput, setCustomInput] = useState('');
+    const [data, setData] = useState([]);
     const [steps, setSteps] = useState([]);
+    const [step, setStep] = useState(0);
+    const [bstRoot, setBstRoot] = useState(null);
     const [searchValue, setSearchValue] = useState('');
     const [searchSteps, setSearchSteps] = useState([]);
-    const [bstRoot, setBstRoot] = useState(null);
 
-    function compare(a, b) {
-        if (selectedType === 'int' || selectedType === 'double') {
-            return a > b;
-        } else {
-            return String(a) > String(b);
+    const handleAlgorithmChange = (e) => {
+        setSelectedAlgorithm(e.target.value);
+        setSteps([]);
+        setStep(0);
+        setBstRoot(null);
+        setSearchSteps([]);
+    };
+
+    const handleTypeChange = (e) => {
+        setSelectedType(e.target.value);
+        setSteps([]);
+        setStep(0);
+        setBstRoot(null);
+        setSearchSteps([]);
+    };
+
+    const handleInputChange = (e) => {
+        setCustomInput(e.target.value);
+        let arr = e.target.value.split(',').map(s => s.trim()).filter(s => s.length > 0);
+        if (selectedType === 'int') arr = arr.map(Number);
+        else if (selectedType === 'double') arr = arr.map(parseFloat);
+        else if (selectedType === 'char') arr = arr.map(s => s[0]);
+        setData(arr);
+        setSteps([]);
+        setStep(0);
+        setBstRoot(null);
+        setSearchSteps([]);
+    };
+
+    const runAlgorithm = () => {
+        let generatedSteps = [];
+        if (selectedAlgorithm === 'bubble') {
+            generatedSteps = getBubbleSortStepsWithPreview(data);
+        } else if (selectedAlgorithm === 'quick') {
+            generatedSteps = getQuickSortStepsWithPreview(data);
+        } else if (selectedAlgorithm === 'bst') {
+            generatedSteps = getBSTSteps(data, setBstRoot);
         }
-    }
+        setSteps(generatedSteps);
+        setSearchSteps([]);
+    };
 
-    function getBubbleSortSteps(arr) {
+    const nextStep = () => {
+        if (step < steps.length - 1) setStep(step + 1);
+    };
+    const prevStep = () => {
+        if (step > 0) setStep(step - 1);
+    };
+
+    const handleSearchValueChange = (e) => {
+        setSearchValue(e.target.value);
+    };
+
+    function getBSTSearchSteps(root, value) {
         const steps = [];
-        const a = [...arr];
-        steps.push({ array: [...a], highlights: [] });
-        for (let i = 0; i < a.length; i++) {
-            for (let j = 0; j < a.length - i - 1; j++) {
-                if (compare(a[j], a[j + 1])) {
-                    [a[j], a[j + 1]] = [a[j + 1], a[j]];
-                    steps.push({ array: [...a], highlights: [j, j + 1] });
-                } else {
-                    steps.push({ array: [...a], highlights: [j, j + 1] });
-                }
-            }
-        }
-        return steps;
-    }
-
-    function getQuickSortSteps(arr) {
-        const steps = [];
-        const a = [...arr];
-        steps.push({ array: [...a], highlights: [] });
-        function quickSort(low, high) {
-            if (low < high) {
-                const pi = partition(low, high);
-                quickSort(low, pi - 1);
-                quickSort(pi + 1, high);
-            }
-        }
-        function partition(low, high) {
-            const pivot = a[high];
-            let i = low;
-            for (let j = low; j < high; j++) {
-                steps.push({ array: [...a], highlights: [j, high] });
-                if (!compare(pivot, a[j])) {
-                    [a[i], a[j]] = [a[j], a[i]];
-                    steps.push({ array: [...a], highlights: [i, j] });
-                    i++;
-                }
-            }
-            [a[i], a[high]] = [a[high], a[i]];
-            steps.push({ array: [...a], highlights: [i, high] });
-            return i;
-        }
-        quickSort(0, a.length - 1);
-        return steps;
-    }
-
-    function getBSTSteps(arr) {
-        function TreeNode(val) {
-            this.val = val;
-            this.left = null;
-            this.right = null;
-        }
-        function insert(root, val) {
-            if (!root) return new TreeNode(val);
-            if (compare(root.val, val)) root.left = insert(root.left, val);
-            else root.right = insert(root.right, val);
-            return root;
-        }
-        let root = null;
-        arr.forEach(val => {
-            root = insert(root, val);
-        });
-        setBstRoot(root);
-        const steps = [];
-        function inorder(node, visited) {
+        function search(node) {
             if (!node) return;
-            inorder(node.left, visited);
-            visited.push(node.val);
-            steps.push({ array: [...visited], highlights: [node.val] });
-            inorder(node.right, visited);
+            steps.push(node.val);
+            if (node.val === value) return;
+            if (compare(node.val, value)) search(node.left);
+            else search(node.right);
         }
-        inorder(root, []);
-        return steps.length ? steps : [{ array: arr, highlights: [] }];
+        search(root);
+        return steps;
+    };
+
+    const runBSTSearch = () => {
+        let val = searchValue;
+        if (selectedType === 'int') val = parseInt(val, 10);
+        else if (selectedType === 'double') val = parseFloat(val);
+        else if (selectedType === 'char') val = val.length > 0 ? val[0] : '';
+        const path = getBSTSearchSteps(bstRoot, val);
+        setSearchSteps(path);
+        setStep(0);
+    };
+
+    function computeTreeLayout(root, width, height, nodeRadius) {
+        if (!root) return [];
+        let levels = [];
+        let queue = [{ node: root, depth: 0, pos: 0 }];
+        let maxDepth = 0;
+        while (queue.length) {
+            let { node, depth, pos } = queue.shift();
+            if (!levels[depth]) levels[depth] = [];
+            levels[depth].push({ node, pos });
+            maxDepth = Math.max(maxDepth, depth);
+            if (node.left) queue.push({ node: node.left, depth: depth + 1, pos: pos * 2 });
+            if (node.right) queue.push({ node: node.right, depth: depth + 1, pos: pos * 2 + 1 });
+        }
+        let layout = [];
+        let verticalGap = Math.max(nodeRadius * 3, height / (maxDepth + 2));
+        for (let d = 0; d < levels.length; d++) {
+            let nodes = levels[d];
+            let horizontalGap = width / (nodes.length + 1);
+            for (let i = 0; i < nodes.length; i++) {
+                layout.push({
+                    node: nodes[i].node,
+                    x: horizontalGap * (i + 1),
+                    y: verticalGap * (d + 1),
+                    depth: d,
+                    pos: nodes[i].pos,
+                    parent: null
+                });
+            }
+        }
+        let nodeMap = new Map();
+        layout.forEach(n => nodeMap.set(n.node, n));
+        layout.forEach(n => {
+            if (n.node.left) nodeMap.get(n.node.left).parent = n;
+            if (n.node.right) nodeMap.get(n.node.right).parent = n;
+        });
+        return layout;
+    };
+
+    function BSTSVG({ root, highlight, width = 600, height = 400 }) {
+        function getDepth(node) {
+            if (!node) return 0;
+            return 1 + Math.max(getDepth(node.left), getDepth(node.right));
+        }
+        const nodeCount = root ? countNodes(root) : 0;
+        const treeDepth = root ? getDepth(root) : 0;
+
+        let nodeRadius = 24;
+        if (nodeCount > 15 || treeDepth > 5) {
+            nodeRadius = Math.max(8, 200 / Math.max(nodeCount, treeDepth * 2));
+        } else if (nodeCount > 7 || treeDepth > 3) {
+            nodeRadius = Math.max(12, 300 / Math.max(nodeCount, treeDepth * 2));
+        }
+
+        const layout = computeTreeLayout(root, width, height, nodeRadius);
+
+        return (
+            <svg width={width} height={height} style={{background: '#c3dac3' }}>
+                {/* Edges */}
+                {layout.map((n, idx) =>
+                    n.parent ? (
+                        <line
+                            key={'edge-' + idx}
+                            x1={n.parent.x}
+                            y1={n.parent.y}
+                            x2={n.x}
+                            y2={n.y}
+                            stroke="#888"
+                            strokeWidth={2}
+                        />
+                    ) : null
+                )}
+                {/* Nodes */}
+                {layout.map((n, idx) => (
+                    <g key={'node-' + idx}>
+                        <circle
+                            cx={n.x}
+                            cy={n.y}
+                            r={nodeRadius}
+                            fill={highlight === n.node.val ? "#ffd700" : "#f9f9f9"}
+                            stroke="#888"
+                            strokeWidth={2}
+                        />
+                        <text
+                            x={n.x}
+                            y={n.y + 6}
+                            textAnchor="middle"
+                            fontWeight={highlight === n.node.val ? "bold" : "normal"}
+                            fontSize={Math.max(10, nodeRadius)}
+                            fill={highlight === n.node.val ? "#222" : "#555"}
+                        >
+                            {n.node.val}
+                        </text>
+                    </g>
+                ))}
+            </svg>
+        );
+    }
+    
+
+    function countNodes(node) {
+        if (!node) return 0;
+        return 1 + countNodes(node.left) + countNodes(node.right);
     }
 
-	function computeTreeLayout(root, width, height, nodeRadius) {
+    const renderArrows = (highlights, swapDirection, pivotIndex) => {
+        if (!highlights || highlights.length < 2) return null;
+        // For quick sort, always show left arrow for swaps
+        if (swapDirection === 'left') {
+            return (
+                <span className="arrow" style={{ marginLeft: 4, marginRight: 4, color: '#222' }}>⇠</span>
+            );
+        }
+        // Fallback for bubble sort
+        return (
+            <span className="arrow" style={{ marginLeft: 4, marginRight: 4 }}>
+                {highlights[0] < highlights[1] ? '⇢' : '⇠'}
+            </span>
+        );
+    };
+
+    const renderBST = (node, highlight) => {
+        if (!node) return null;
+        const isHighlighted = highlight === node.val;
+        return (
+            <div className="bst-node" style={{
+                display: 'inline-block',
+                margin: '8px',
+                padding: '8px',
+                border: '1px solid #888',
+                borderRadius: '50%',
+                background: isHighlighted ? '#ffd700' : '#f9f9f9',
+                color: isHighlighted ? '#222' : '#555',
+                fontWeight: isHighlighted ? 'bold' : 'normal'
+            }}>
+                {node.val}
+                <div style={{ display: 'flex', justifyContent: 'center', marginTop: 8 }}>
+                    {node.left && (
+                        <div style={{ marginRight: 16 }}>
+                            {renderBST(node.left, highlight)}
+                        </div>
+                    )}
+                    {node.right && (
+                        <div style={{ marginLeft: 16 }}>
+                            {renderBST(node.right, highlight)}
+                        </div>
+                    )}
+                </div>
+            </div>
+        );
+    };
+
+    
+
+/**
+ * @function getBSTSteps
+ * @description Constructs a binary search tree from the array and returns steps of inorder traversal.
+ * @param {Array} arr Input array
+ * @returns {Array} Step objects representing visited nodes
+ */
+function getBSTSteps(arr) {
+    function TreeNode(val) {
+        this.val = val;
+        this.left = null;
+        this.right = null;
+    };
+    function insert(root, val) {
+        if (!root) return new TreeNode(val);
+        if (compare(root.val, val)) root.left = insert(root.left, val);
+        else root.right = insert(root.right, val);
+        return root;
+    };
+    let root = null;
+    arr.forEach(val => {
+        root = insert(root, val);
+    });
+    setBstRoot(root);
+    const steps = [];
+    function inorder(node, visited) {
+        if (!node) return;
+        inorder(node.left, visited);
+        visited.push(node.val);
+        steps.push({ array: [...visited], highlights: [node.val] });
+        inorder(node.right, visited);
+    };
+    inorder(root, []);
+    return steps.length ? steps : [{ array: arr, highlights: [] }];
+
+
+/**
+ * @function getMergeSortSteps
+ * @description Generates step-by-step states for Merge Sort algorithm.
+ * Each step is either a preview (showing which indices will be merged) or the result after merging.
+ * @param {Array} arr Array to sort
+ * @returns {Array} Step objects showing array state and merges
+ */
+function getMergeSortSteps(arr) {
+    const steps = [];
+    const a = [...arr];
+    steps.push({ array: [...a], highlights: [] });
+    function mergeSort(low, high) {
+        if (low >= high) return;
+        const mid = Math.floor((low + high) / 2);
+        mergeSort(low, mid);
+        mergeSort(mid + 1, high);
+        merge(low, mid, high);
+    }
+    function merge(low, mid, high) {
+        let left = a.slice(low, mid + 1);
+        let right = a.slice(mid + 1, high + 1);
+        let i = 0, j = 0, k = low;
+        // Preview step: show which indices will be merged
+        let mergeIndices = [];
+        for (let idx = low; idx <= high; idx++) mergeIndices.push(idx);
+        steps.push({ array: [...a], highlights: mergeIndices, preview: true });
+        while (i < left.length && j < right.length) {
+            if (compare(left[i], right[j])) {
+                a[k] = right[j];
+                j++;
+            } else {
+                a[k] = left[i];
+                i++;
+            }
+            k++;
+        }
+        while (i < left.length) {
+            a[k] = left[i];
+            i++; k++;
+        }
+        while (j < right.length) {
+            a[k] = right[j];
+            j++; k++;
+        }
+        // Actual move step: no highlights
+        steps.push({ array: [...a], highlights: [], preview: false });
+    }
+    mergeSort(0, a.length - 1);
+    return steps;
+}
+
+
+    /**
+     * @function computeTreeLayout
+     * @description Computes (x, y) positions for rendering BST nodes in an SVG tree layout.
+     * @param {Object} root BST root node
+     * @param {number} width SVG width
+     * @param {number} height SVG height
+     * @param {number} nodeRadius Radius of each tree node
+     * @returns {Array} Array of positioned nodes for visualization
+     */
+function computeTreeLayout(root, width, height, nodeRadius) {
     if (!root) return [];
     let levels = [];
     let queue = [{ node: root, depth: 0, pos: 0 }];
@@ -123,14 +473,21 @@ function AlgorithmVisualizer() {
         if (node.right) queue.push({ node: node.right, depth: depth + 1, pos: pos * 2 + 1 });
     }
     let layout = [];
-    let verticalGap = Math.max(nodeRadius * 3, height / (maxDepth + 2));
+    // For small trees, increase vertical and horizontal gaps to center and scale nodes
+    let minVerticalGap = nodeRadius * 4;
+    let verticalGap = Math.max(minVerticalGap, height / (maxDepth + 2));
     for (let d = 0; d < levels.length; d++) {
         let nodes = levels[d];
-        let horizontalGap = width / (nodes.length + 1);
+        // For small trees, use larger horizontal gap to center nodes
+        let minHorizontalGap = nodeRadius * 4;
+        let horizontalGap = Math.max(minHorizontalGap, width / (nodes.length + 1));
+        // Center nodes horizontally
+        let totalWidth = horizontalGap * nodes.length;
+        let offsetX = (width - totalWidth) / 2 + horizontalGap / 2;
         for (let i = 0; i < nodes.length; i++) {
             layout.push({
                 node: nodes[i].node,
-                x: horizontalGap * (i + 1),
+                x: offsetX + horizontalGap * i,
                 y: verticalGap * (d + 1),
                 depth: d,
                 pos: nodes[i].pos,
@@ -147,6 +504,17 @@ function AlgorithmVisualizer() {
     return layout;
 }
 
+
+
+/**
+ * @component BSTSVG
+ * @description Renders a Binary Search Tree using SVG. Highlights current node if specified.
+ * @param {Object} props.root Root of BST
+ * @param {any} props.highlight Value to highlight
+ * @param {number} props.width SVG width
+ * @param {number} props.height SVG height
+ * @returns {JSX.Element} SVG element representing the tree
+*/
 function BSTSVG({ root, highlight, width = 600, height = 400 }) {
     function getDepth(node) {
         if (!node) return 0;
@@ -195,9 +563,11 @@ function BSTSVG({ root, highlight, width = 600, height = 400 }) {
                         x={n.x}
                         y={n.y + 6}
                         textAnchor="middle"
-                        fontWeight={highlight === n.node.val ? "bold" : "normal"}
-                        fontSize={Math.max(10, nodeRadius)}
-                        fill={highlight === n.node.val ? "#222" : "#555"}
+                        style={{
+                            fontWeight: highlight === n.node.val ? "bold" : "normal",
+                            fontSize: Math.max(10, nodeRadius),
+                            fill: highlight === n.node.val ? "#222" : "#555"
+                        }}
                     >
                         {n.node.val}
                     </text>
@@ -207,11 +577,28 @@ function BSTSVG({ root, highlight, width = 600, height = 400 }) {
     );
 }
 
+
+
+/**
+ * @function countNodes
+ * @description Recursively counts the number of nodes in a binary tree.
+ * @param {Object} node Root node
+ * @returns {number} Number of nodes
+ */
 function countNodes(node) {
     if (!node) return 0;
     return 1 + countNodes(node.left) + countNodes(node.right);
 }
 
+
+
+/**
+ * @function getBSTSearchSteps
+ * @description Records the path taken during BST search.
+ * @param {Object} root BST root
+ * @param {any} value Value to search for
+ * @returns {Array} Array of visited node values
+ */
 function getBSTSearchSteps(root, value) {
         const steps = [];
         function search(node) {
@@ -224,108 +611,7 @@ function getBSTSearchSteps(root, value) {
         search(root);
         return steps;
     }
-
-    const runAlgorithm = () => {
-        let generatedSteps = [];
-        if (selectedAlgorithm === 'bubble') {
-            generatedSteps = getBubbleSortSteps(data);
-        } else if (selectedAlgorithm === 'quick') {
-            generatedSteps = getQuickSortSteps(data);
-        } else if (selectedAlgorithm === 'bst') {
-            generatedSteps = getBSTSteps(data);
-        }
-        setSteps(generatedSteps);
-        setStep(0);
-        setSearchSteps([]);
-    };
-
-    const handleInputChange = (e) => {
-        setCustomInput(e.target.value);
-        let arr = e.target.value.split(',').map(s => s.trim()).filter(s => s.length > 0);
-        if (selectedType === 'int') {
-            arr = arr.map(v => parseInt(v, 10)).filter(n => !isNaN(n));
-        } else if (selectedType === 'double') {
-            arr = arr.map(v => parseFloat(v)).filter(n => !isNaN(n));
-        } else if (selectedType === 'char') {
-            arr = arr.map(v => v.length > 0 ? v[0] : '').filter(c => c !== '');
-        }
-        setData(arr);
-    };
-
-    const handleTypeChange = (e) => {
-        setSelectedType(e.target.value);
-        handleInputChange({ target: { value: customInput } });
-        setSteps([]);
-        setStep(0);
-    };
-
-    const handleAlgorithmChange = (e) => {
-        setSelectedAlgorithm(e.target.value);
-        setSteps([]);
-        setStep(0);
-        setSearchSteps([]);
-    };
-
-    const nextStep = () => {
-        if (step < steps.length - 1) setStep(step + 1);
-    };
-    const prevStep = () => {
-        if (step > 0) setStep(step - 1);
-    };
-
-    const handleSearchValueChange = (e) => {
-        setSearchValue(e.target.value);
-    };
-
-    const runBSTSearch = () => {
-        let val = searchValue;
-        if (selectedType === 'int') val = parseInt(val, 10);
-        else if (selectedType === 'double') val = parseFloat(val);
-        else if (selectedType === 'char') val = val.length > 0 ? val[0] : '';
-        const path = getBSTSearchSteps(bstRoot, val);
-        setSearchSteps(path);
-        setStep(0);
-    };
-
-    const renderArrows = (highlights) => {
-        if (!highlights || highlights.length < 2) return null;
-        return (
-            <span className="arrow" style={{ marginLeft: 4, marginRight: 4 }}>
-                →
-            </span>
-        );
-    };
-
-    const renderBST = (node, highlight) => {
-        if (!node) return null;
-        const isHighlighted = highlight === node.val;
-        return (
-            <div className="bst-node" style={{
-                display: 'inline-block',
-                margin: '8px',
-                padding: '8px',
-                border: '1px solid #888',
-                borderRadius: '50%',
-                background: isHighlighted ? '#ffd700' : '#f9f9f9',
-                color: isHighlighted ? '#222' : '#555',
-                fontWeight: isHighlighted ? 'bold' : 'normal'
-            }}>
-                {node.val}
-                <div style={{ display: 'flex', justifyContent: 'center', marginTop: 8 }}>
-                    {node.left && (
-                        <div style={{ marginRight: 16 }}>
-                            {renderBST(node.left, highlight)}
-                        </div>
-                    )}
-                    {node.right && (
-                        <div style={{ marginLeft: 16 }}>
-                            {renderBST(node.right, highlight)}
-                        </div>
-                    )}
-                </div>
-            </div>
-        );
-    };
+}
 
     return (
         <main className="visualizer-container">
@@ -373,8 +659,8 @@ function getBSTSearchSteps(root, value) {
                                 {searchSteps.length > 0 ? (
                                     <div>
                                         <p className="search-step-label">
-											Step {step + 1} / {searchSteps.length}: Searching for <strong>{searchValue}</strong>
-										</p>
+                                            Step {step + 1} / {searchSteps.length}: Searching for <strong>{searchValue}</strong>
+                                        </p>
                                         <BSTSVG root={bstRoot} highlight={searchSteps[step]} width={600} height={400} />
                                     </div>
                                 ) : (
@@ -402,30 +688,50 @@ function getBSTSearchSteps(root, value) {
                     </div>
                 ) : (
                     <ul className="data-list">
-                        {(steps[step]?.array || data).map((num, idx) => (
-                            <li key={idx} className="data-item" style={{
-                                position: 'relative',
-                                display: 'inline-block',
-                                marginRight: 8,
-                                background: steps[step]?.highlights?.includes(idx) ? '#6b6054' : '#f9f9f9',
-                                color: steps[step]?.highlights?.includes(idx) ? '#222' : '#555',
-                                fontWeight: steps[step]?.highlights?.includes(idx) ? 'bold' : 'normal',
-                                padding: '8px',
-                                borderRadius: '4px',
-                                border: '1px solid #888'
-                            }}>
-                                {String(num)}
-                                {steps[step]?.highlights?.length === 2 && steps[step]?.highlights?.includes(idx) && (
-                                    renderArrows(steps[step].highlights)
-                                )}
-                            </li>
-                        ))}
+                        {(steps[step]?.array || data).map((num, idx) => {
+                            const isPivot = steps[step]?.pivotIndex === idx;
+                            const isHighlighted = steps[step]?.highlights?.includes(idx);
+                            // Use the same highlight color for pivot and other highlighted elements
+                            const highlightColor = '#6b6054';
+                            return (
+                                <li key={idx} className="data-item" style={{
+                                    position: 'relative',
+                                    display: 'inline-block',
+                                    marginRight: 8,
+                                    background: (isPivot || isHighlighted) ? highlightColor : '#f9f9f9',
+                                    color: (isPivot || isHighlighted) ? '#222' : '#555',
+                                    fontWeight: (isPivot || isHighlighted) ? 'bold' : 'normal',
+                                    padding: '8px',
+                                    borderRadius: '4px',
+                                    border: '1px solid #888'
+                                }}>
+                                    {String(num)}
+                                    {/* Show arrow for swaps in preview steps */}
+                                    {steps[step]?.preview && steps[step]?.highlights?.length === 2 && steps[step]?.highlights?.includes(idx) &&
+                                        renderArrows(steps[step].highlights, steps[step].swapDirection, steps[step].pivotIndex)
+                                    }
+                                    {/* Always show pivot label in preview steps */}
+                                    {steps[step]?.preview && isPivot && (
+                                        <span style={{ marginLeft: 4, color: '#d2691e', fontWeight: 'bold' }}>(pivot)</span>
+                                    )}
+                                </li>
+                            );
+                        })}
                     </ul>
                 )}
             </section>
             <nav className="step-controls">
                 <button className="step-btn" onClick={prevStep} disabled={step === 0}>Previous</button>
-                <span className="step-indicator">Step {step + 1} / {searchSteps.length > 0 ? searchSteps.length : (steps.length || 1)}</span>
+                <span className="step-indicator">
+                    Step {(() => {
+                        if (searchSteps.length > 0) return step;
+                        let nonPreviewCount = 0;
+                        for (let i = 0; i <= step; i++) {
+                            if (!steps[i]?.preview) nonPreviewCount++;
+                        }
+                        return Math.max(0, nonPreviewCount - 1);
+                    })()} / {searchSteps.length > 0 ? searchSteps.length - 1 : Math.max(0, steps.filter(s => !s.preview).length - 1)}
+                </span>
                 <button className="step-btn" onClick={nextStep} disabled={step >= ((searchSteps.length > 0 ? searchSteps.length : steps.length) - 1)}>Next</button>
             </nav>
         </main>

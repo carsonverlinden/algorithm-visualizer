@@ -8,6 +8,8 @@ body {
 
 .visualizer-container {
   max-width: 600px;
+  min-width: 320px;
+  width: 100%;
   margin: 40px auto;
   background: #A1B0AB;
   border-radius: 18px;
@@ -85,6 +87,8 @@ body {
   border-radius: 12px;
   padding: 18px 0 10px 0;
   box-shadow: 0 2px 8px rgba(44, 62, 80, 0.04);
+  min-width: 320px;
+  width: 100%;
 }
 .vis-title {
   text-align: center;
