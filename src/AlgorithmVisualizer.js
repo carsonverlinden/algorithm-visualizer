@@ -1,12 +1,67 @@
 import React, { useState } from 'react';
 import './App.css';
 
+// Algorithm options for dropdown
 const algorithms = [
     { value: 'bubble', label: 'Bubble Sort' },
     { value: 'quick', label: 'Quick Sort' },
-    { value: 'bst', label: 'Binary Search Tree' },
+    { value: 'merge', label: 'Merge Sort' },
+    { value: 'bst', label: 'Binary Search Tree' }
 ];
 
+/**
+ * @function getMergeSortStepsWithPreview
+ * @description Generates step-by-step states for Merge Sort algorithm with preview steps before each merge.
+ * @param {Array} arr Array to sort
+ * @returns {Array} Step objects showing array state and merges
+ */
+function getMergeSortStepsWithPreview(arr) {
+    const steps = [];
+    const a = [...arr];
+    steps.push({ array: [...a], highlights: [] });
+    // Recursive merge sort helper
+    function mergeSort(low, high) {
+        if (low >= high) return;
+        const mid = Math.floor((low + high) / 2);
+        mergeSort(low, mid);
+        mergeSort(mid + 1, high);
+        merge(low, mid, high);
+    }
+    // Merge helper for merge sort
+    function merge(low, mid, high) {
+        let left = a.slice(low, mid + 1);
+        let right = a.slice(mid + 1, high + 1);
+        let i = 0, j = 0, k = low;
+        // Preview step: show which indices will be merged
+        let mergeIndices = [];
+        for (let idx = low; idx <= high; idx++) mergeIndices.push(idx);
+        steps.push({ array: [...a], highlights: mergeIndices, preview: true });
+        while (i < left.length && j < right.length) {
+            if (compare(left[i], right[j])) {
+                a[k] = right[j];
+                j++;
+            } else {
+                a[k] = left[i];
+                i++;
+            }
+            k++;
+        }
+        while (i < left.length) {
+            a[k] = left[i];
+            i++; k++;
+        }
+        while (j < right.length) {
+            a[k] = right[j];
+            j++; k++;
+        }
+        // Actual move step: no highlights
+        steps.push({ array: [...a], highlights: [], preview: false });
+    }
+    mergeSort(0, a.length - 1);
+    return steps;
+}
+
+// Data type options for dropdown
 const dataTypes = [
     { value: 'int', label: 'Integer' },
     { value: 'double', label: 'Float' },
@@ -14,6 +69,13 @@ const dataTypes = [
     { value: 'char', label: 'Char' },
 ];
 
+/**
+ * @function compare
+ * @description Compares two values for sorting, handling numbers, strings, and chars.
+ * @param {any} a First value
+ * @param {any} b Second value
+ * @returns {boolean} True if a > b
+ */
 function compare(a, b) {
     // Handles int, float, string, char
     if (typeof a === 'number' && typeof b === 'number') {
@@ -22,7 +84,12 @@ function compare(a, b) {
     return String(a) > String(b);
 }
 
-// Bubble Sort with preview logic
+/**
+ * @function getBubbleSortStepsWithPreview
+ * @description Generates step-by-step states for Bubble Sort algorithm with preview steps before each swap.
+ * @param {Array} arr Array to sort
+ * @returns {Array} Step objects showing array state and swaps
+ */
 function getBubbleSortStepsWithPreview(arr) {
     const steps = [];
     const a = [...arr];
@@ -41,11 +108,17 @@ function getBubbleSortStepsWithPreview(arr) {
     return steps;
 }
 
-// Quick Sort with preview logic
+/**
+ * @function getQuickSortStepsWithPreview
+ * @description Generates step-by-step states for Quick Sort algorithm with preview steps before each swap and pivot selection.
+ * @param {Array} arr Array to sort
+ * @returns {Array} Step objects showing array state, swaps, and pivots
+ */
 function getQuickSortStepsWithPreview(arr) {
     const steps = [];
     const a = [...arr];
     steps.push({ array: [...a], highlights: [] });
+    // Recursive quick sort helper
     function quickSort(low, high) {
         if (low < high) {
             const pi = partition(low, high);
@@ -53,6 +126,7 @@ function getQuickSortStepsWithPreview(arr) {
             quickSort(pi + 1, high);
         }
     }
+    // Partition helper for quick sort
     function partition(low, high) {
         let pivot = a[high];
         let i = low - 1;
@@ -94,7 +168,9 @@ function getQuickSortStepsWithPreview(arr) {
 }
 
 
+// Build BST and generate traversal steps
 function getBSTSteps(arr, setBstRoot) {
+    // BST node constructor
     function TreeNode(val) {
         this.val = val;
         this.left = null;
@@ -112,6 +188,7 @@ function getBSTSteps(arr, setBstRoot) {
     });
     setBstRoot(root);
     const steps = [];
+    // Inorder traversal helper
     function inorder(node, visited) {
         if (!node) return;
         inorder(node.left, visited);
@@ -123,6 +200,11 @@ function getBSTSteps(arr, setBstRoot) {
     return steps.length ? steps : [{ array: arr, highlights: [] }];
 }
 
+/**
+ * @component AlgorithmVisualizer
+ * @description Main React component for the algorithm visualizer UI and logic.
+ * @returns {JSX.Element} The visualizer app
+ */
 function AlgorithmVisualizer() {
     const [selectedAlgorithm, setSelectedAlgorithm] = useState('bubble');
     const [selectedType, setSelectedType] = useState('int');
@@ -134,6 +216,7 @@ function AlgorithmVisualizer() {
     const [searchValue, setSearchValue] = useState('');
     const [searchSteps, setSearchSteps] = useState([]);
 
+    // Handle algorithm selection change
     const handleAlgorithmChange = (e) => {
         setSelectedAlgorithm(e.target.value);
         setSteps([]);
@@ -142,6 +225,7 @@ function AlgorithmVisualizer() {
         setSearchSteps([]);
     };
 
+    // Handle data type selection change
     const handleTypeChange = (e) => {
         setSelectedType(e.target.value);
         setSteps([]);
@@ -150,6 +234,7 @@ function AlgorithmVisualizer() {
         setSearchSteps([]);
     };
 
+    // Handle custom input change
     const handleInputChange = (e) => {
         setCustomInput(e.target.value);
         let arr = e.target.value.split(',').map(s => s.trim()).filter(s => s.length > 0);
@@ -163,12 +248,15 @@ function AlgorithmVisualizer() {
         setSearchSteps([]);
     };
 
+    // Run selected algorithm and generate steps
     const runAlgorithm = () => {
         let generatedSteps = [];
         if (selectedAlgorithm === 'bubble') {
             generatedSteps = getBubbleSortStepsWithPreview(data);
         } else if (selectedAlgorithm === 'quick') {
             generatedSteps = getQuickSortStepsWithPreview(data);
+        } else if (selectedAlgorithm === 'merge') {
+            generatedSteps = getMergeSortStepsWithPreview(data);
         } else if (selectedAlgorithm === 'bst') {
             generatedSteps = getBSTSteps(data, setBstRoot);
         }
@@ -176,17 +264,27 @@ function AlgorithmVisualizer() {
         setSearchSteps([]);
     };
 
+    // Go to next visualization step
     const nextStep = () => {
         if (step < steps.length - 1) setStep(step + 1);
     };
+    // Go to previous visualization step
     const prevStep = () => {
         if (step > 0) setStep(step - 1);
     };
-
+    // Handle BST search value input change
     const handleSearchValueChange = (e) => {
         setSearchValue(e.target.value);
     };
 
+    /**
+     * @function getBSTSearchSteps
+     * @description Records the path taken during BST search.
+     * @param {Object} root BST root
+     * @param {any} value Value to search for
+     * @returns {Array} Array of visited node values
+     */
+    // Generate steps for BST search path
     function getBSTSearchSteps(root, value) {
         const steps = [];
         function search(node) {
@@ -200,6 +298,7 @@ function AlgorithmVisualizer() {
         return steps;
     };
 
+    // Run BST search and update steps
     const runBSTSearch = () => {
         let val = searchValue;
         if (selectedType === 'int') val = parseInt(val, 10);
@@ -210,6 +309,7 @@ function AlgorithmVisualizer() {
         setStep(0);
     };
 
+    // Compute layout positions for BST SVG rendering
     function computeTreeLayout(root, width, height, nodeRadius) {
         if (!root) return [];
         let levels = [];
@@ -248,6 +348,7 @@ function AlgorithmVisualizer() {
         return layout;
     };
 
+    // SVG component for rendering BST
     function BSTSVG({ root, highlight, width = 600, height = 400 }) {
         function getDepth(node) {
             if (!node) return 0;
@@ -308,12 +409,21 @@ function AlgorithmVisualizer() {
         );
     }
     
-
+    // Recursively count nodes in BST
     function countNodes(node) {
         if (!node) return 0;
         return 1 + countNodes(node.left) + countNodes(node.right);
     }
 
+    /**
+     * @function renderArrows
+     * @description Renders directional arrows for swap previews in sorting visualizations.
+     * @param {Array} highlights Indices being swapped
+     * @param {string} swapDirection Direction of swap ('left' or 'right')
+     * @param {number} pivotIndex Index of pivot (for quick sort)
+     * @returns {JSX.Element|null} Arrow element or null
+     */
+    // Render directional arrows for sorting steps
     const renderArrows = (highlights, swapDirection, pivotIndex) => {
         if (!highlights || highlights.length < 2) return null;
         // For quick sort, always show left arrow for swaps
@@ -330,6 +440,14 @@ function AlgorithmVisualizer() {
         );
     };
 
+    /**
+     * @function renderBST
+     * @description Recursively renders a binary search tree as nested divs for visualization.
+     * @param {Object} node BST node
+     * @param {any} highlight Value to highlight
+     * @returns {JSX.Element|null} Tree visualization or null
+     */
+    // Recursively render BST as nested divs
     const renderBST = (node, highlight) => {
         if (!node) return null;
         const isHighlighted = highlight === node.val;
@@ -397,68 +515,15 @@ function getBSTSteps(arr) {
     inorder(root, []);
     return steps.length ? steps : [{ array: arr, highlights: [] }];
 
-
 /**
- * @function getMergeSortSteps
- * @description Generates step-by-step states for Merge Sort algorithm.
- * Each step is either a preview (showing which indices will be merged) or the result after merging.
- * @param {Array} arr Array to sort
- * @returns {Array} Step objects showing array state and merges
+ * @function computeTreeLayout
+ * @description Computes (x, y) positions for rendering BST nodes in an SVG tree layout.
+ * @param {Object} root BST root node
+ * @param {number} width SVG width
+ * @param {number} height SVG height
+ * @param {number} nodeRadius Radius of each tree node
+ * @returns {Array} Array of positioned nodes for visualization
  */
-function getMergeSortSteps(arr) {
-    const steps = [];
-    const a = [...arr];
-    steps.push({ array: [...a], highlights: [] });
-    function mergeSort(low, high) {
-        if (low >= high) return;
-        const mid = Math.floor((low + high) / 2);
-        mergeSort(low, mid);
-        mergeSort(mid + 1, high);
-        merge(low, mid, high);
-    }
-    function merge(low, mid, high) {
-        let left = a.slice(low, mid + 1);
-        let right = a.slice(mid + 1, high + 1);
-        let i = 0, j = 0, k = low;
-        // Preview step: show which indices will be merged
-        let mergeIndices = [];
-        for (let idx = low; idx <= high; idx++) mergeIndices.push(idx);
-        steps.push({ array: [...a], highlights: mergeIndices, preview: true });
-        while (i < left.length && j < right.length) {
-            if (compare(left[i], right[j])) {
-                a[k] = right[j];
-                j++;
-            } else {
-                a[k] = left[i];
-                i++;
-            }
-            k++;
-        }
-        while (i < left.length) {
-            a[k] = left[i];
-            i++; k++;
-        }
-        while (j < right.length) {
-            a[k] = right[j];
-            j++; k++;
-        }
-        // Actual move step: no highlights
-        steps.push({ array: [...a], highlights: [], preview: false });
-    }
-    mergeSort(0, a.length - 1);
-    return steps;
-}
-
-
-    /**
-     * @function computeTreeLayout
-     * @description Computes (x, y) positions for rendering BST nodes in an SVG tree layout.
-     * @param {Object} root BST root node
-     * @param {number} width SVG width
-     * @param {number} height SVG height
-     * @param {number} nodeRadius Radius of each tree node
-     * @returns {Array} Array of positioned nodes for visualization
-     */
 function computeTreeLayout(root, width, height, nodeRadius) {
     if (!root) return [];
     let levels = [];
@@ -532,6 +597,7 @@ function BSTSVG({ root, highlight, width = 600, height = 400 }) {
 
     const layout = computeTreeLayout(root, width, height, nodeRadius);
 
+    // Main render return for AlgorithmVisualizer
     return (
         <svg width={width} height={height} style={{background: '#c3dac3' }}>
             {}
@@ -691,7 +757,6 @@ function getBSTSearchSteps(root, value) {
                         {(steps[step]?.array || data).map((num, idx) => {
                             const isPivot = steps[step]?.pivotIndex === idx;
                             const isHighlighted = steps[step]?.highlights?.includes(idx);
-                            // Use the same highlight color for pivot and other highlighted elements
                             const highlightColor = '#6b6054';
                             return (
                                 <li key={idx} className="data-item" style={{
