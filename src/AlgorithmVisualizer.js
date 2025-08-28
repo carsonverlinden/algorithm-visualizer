@@ -389,7 +389,7 @@ function AlgorithmVisualizer() {
                             cx={n.x}
                             cy={n.y}
                             r={nodeRadius}
-                            fill={highlight === n.node.val ? "#ffd700" : "#f9f9f9"}
+                            fill={highlight === n.node.val ? "#929487" : "#f9f9f9"}
                             stroke="#888"
                             strokeWidth={2}
                         />
@@ -458,7 +458,7 @@ function AlgorithmVisualizer() {
                 padding: '8px',
                 border: '1px solid #888',
                 borderRadius: '50%',
-                background: isHighlighted ? '#ffd700' : '#f9f9f9',
+                background: isHighlighted ? '#929487' : '#f9f9f9',
                 color: isHighlighted ? '#222' : '#555',
                 fontWeight: isHighlighted ? 'bold' : 'normal'
             }}>
@@ -621,7 +621,7 @@ function BSTSVG({ root, highlight, width = 600, height = 400 }) {
                         cx={n.x}
                         cy={n.y}
                         r={nodeRadius}
-                        fill={highlight === n.node.val ? "#ffd700" : "#f9f9f9"}
+                        fill={highlight === n.node.val ? "#929487" : "#f9f9f9"}
                         stroke="#888"
                         strokeWidth={2}
                     />
