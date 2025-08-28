@@ -325,6 +325,20 @@ function AlgorithmVisualizer() {
         }
         let layout = [];
         let verticalGap = Math.max(nodeRadius * 3, height / (maxDepth + 2));
+        // Detect singly linked tree (degenerate chain)
+        let isSingleChain = true;
+        let curr = root;
+        while (curr) {
+            if ((curr.left && curr.right) || (curr.left && curr.left.right) || (curr.right && curr.right.left)) {
+                isSingleChain = false;
+                break;
+            }
+            curr = curr.left || curr.right;
+        }
+        let topOffset = 0;
+        if (isSingleChain && levels.length >= 4) {
+            topOffset = nodeRadius * 2; // Force top node to be near top
+        }
         for (let d = 0; d < levels.length; d++) {
             let nodes = levels[d];
             let horizontalGap = width / (nodes.length + 1);
@@ -332,7 +346,7 @@ function AlgorithmVisualizer() {
                 layout.push({
                     node: nodes[i].node,
                     x: horizontalGap * (i + 1),
-                    y: verticalGap * (d + 1),
+                    y: verticalGap * (d + 1) - (isSingleChain ? (verticalGap * (levels.length - 1) / 2 - topOffset) : 0),
                     depth: d,
                     pos: nodes[i].pos,
                     parent: null
@@ -367,44 +381,46 @@ function AlgorithmVisualizer() {
         const layout = computeTreeLayout(root, width, height, nodeRadius);
 
         return (
-            <svg width={width} height={height} style={{background: '#c3dac3' }}>
-                {/* Edges */}
-                {layout.map((n, idx) =>
-                    n.parent ? (
-                        <line
-                            key={'edge-' + idx}
-                            x1={n.parent.x}
-                            y1={n.parent.y}
-                            x2={n.x}
-                            y2={n.y}
-                            stroke="#888"
-                            strokeWidth={2}
-                        />
-                    ) : null
-                )}
-                {/* Nodes */}
-                {layout.map((n, idx) => (
-                    <g key={'node-' + idx}>
-                        <circle
-                            cx={n.x}
-                            cy={n.y}
-                            r={nodeRadius}
-                            fill={highlight === n.node.val ? "#929487" : "#f9f9f9"}
-                            stroke="#888"
-                            strokeWidth={2}
-                        />
-                        <text
-                            x={n.x}
-                            y={n.y + 6}
-                            textAnchor="middle"
-                            fontWeight={highlight === n.node.val ? "bold" : "normal"}
-                            fontSize={Math.max(10, nodeRadius)}
-                            fill={highlight === n.node.val ? "#222" : "#555"}
-                        >
-                            {n.node.val}
-                        </text>
-                    </g>
-                ))}
+            <svg width={width} height={height} style={{background: '#c3dac3'}}>
+                <g transform="scale(0.9,0.9) translate(30,30)">
+                    {/* Edges */}
+                    {layout.map((n, idx) =>
+                        n.parent ? (
+                            <line
+                                key={'edge-' + idx}
+                                x1={n.parent.x}
+                                y1={n.parent.y}
+                                x2={n.x}
+                                y2={n.y}
+                                stroke="#888"
+                                strokeWidth={2}
+                            />
+                        ) : null
+                    )}
+                    {/* Nodes */}
+                    {layout.map((n, idx) => (
+                        <g key={'node-' + idx}>
+                            <circle
+                                cx={n.x}
+                                cy={n.y}
+                                r={nodeRadius}
+                                fill={highlight === n.node.val ? "#929487" : "#f9f9f9"}
+                                stroke="#888"
+                                strokeWidth={2}
+                            />
+                            <text
+                                x={n.x}
+                                y={n.y + 6}
+                                textAnchor="middle"
+                                fontWeight={highlight === n.node.val ? "bold" : "normal"}
+                                fontSize={Math.max(10, nodeRadius)}
+                                fill={highlight === n.node.val ? "#222" : "#555"}
+                            >
+                                {n.node.val}
+                            </text>
+                        </g>
+                    ))}
+                </g>
             </svg>
         );
     }
@@ -588,11 +604,13 @@ function BSTSVG({ root, highlight, width = 600, height = 400 }) {
     const nodeCount = root ? countNodes(root) : 0;
     const treeDepth = root ? getDepth(root) : 0;
 
-    let nodeRadius = 24;
+    let nodeRadius = 8;
     if (nodeCount > 15 || treeDepth > 5) {
-        nodeRadius = Math.max(8, 200 / Math.max(nodeCount, treeDepth * 2));
+        nodeRadius = Math.max(3.2, 96 / Math.max(nodeCount, treeDepth * 2));
     } else if (nodeCount > 7 || treeDepth > 3) {
-        nodeRadius = Math.max(12, 300 / Math.max(nodeCount, treeDepth * 2));
+        nodeRadius = Math.max(4.8, 128 / Math.max(nodeCount, treeDepth * 2));
+    } else if (treeDepth >= 4) {
+        nodeRadius = Math.max(4, 80 / treeDepth);
     }
 
     const layout = computeTreeLayout(root, width, height, nodeRadius);
