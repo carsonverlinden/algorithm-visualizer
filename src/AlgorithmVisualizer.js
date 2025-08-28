@@ -440,20 +440,25 @@ function AlgorithmVisualizer() {
      * @returns {JSX.Element|null} Arrow element or null
      */
     // Render directional arrows for sorting steps
-    const renderArrows = (highlights, swapDirection, pivotIndex) => {
+    // Render per-element directional arrows for sorting steps
+    const renderArrows = (idx, highlights, stepIdx) => {
         if (!highlights || highlights.length < 2) return null;
-        // For quick sort, always show left arrow for swaps
-        if (swapDirection === 'left') {
-            return (
-                <span className="arrow" style={{ marginLeft: 4, marginRight: 4, color: '#222' }}>⇠</span>
-            );
+        // Only show arrow if this index is highlighted
+        if (!highlights.includes(idx)) return null;
+        // Find direction by comparing current and next step
+        if (steps[stepIdx + 1] && steps[stepIdx]?.preview) {
+            const currArr = steps[stepIdx].array;
+            const nextArr = steps[stepIdx + 1].array;
+            const value = currArr[idx];
+            const currPos = idx;
+            const nextPos = nextArr.indexOf(value);
+            if (nextPos > currPos) {
+                return <span className="arrow" style={{ marginLeft: 4, marginRight: 4, color: '#222' }}>⇢</span>;
+            } else if (nextPos < currPos) {
+                return <span className="arrow" style={{ marginLeft: 4, marginRight: 4, color: '#222' }}>⇠</span>;
+            }
         }
-        // Fallback for bubble sort
-        return (
-            <span className="arrow" style={{ marginLeft: 4, marginRight: 4 }}>
-                {highlights[0] < highlights[1] ? '⇢' : '⇠'}
-            </span>
-        );
+        return null;
     };
 
     /**
@@ -789,9 +794,9 @@ function getBSTSearchSteps(root, value) {
                                     border: '1px solid #888'
                                 }}>
                                     {String(num)}
-                                    {/* Show arrow for swaps in preview steps */}
+                                    {/* Show per-element arrow for swaps in preview steps */}
                                     {steps[step]?.preview && steps[step]?.highlights?.length === 2 && steps[step]?.highlights?.includes(idx) &&
-                                        renderArrows(steps[step].highlights, steps[step].swapDirection, steps[step].pivotIndex)
+                                        renderArrows(idx, steps[step].highlights, step)
                                     }
                                     {/* Always show pivot label in preview steps */}
                                     {steps[step]?.preview && isPivot && (
