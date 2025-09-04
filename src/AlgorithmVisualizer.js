@@ -187,16 +187,33 @@ function getBSTSteps(arr, setBstRoot) {
         root = insert(root, val);
     });
     setBstRoot(root);
-    const steps = [];
-    // Inorder traversal helper
-    function inorder(node, visited) {
+    // ...existing code...
+    // Get sorted values by inorder traversal
+    function inorderList(node, result) {
         if (!node) return;
-        inorder(node.left, visited);
-        visited.push(node.val);
-        steps.push({ array: [...visited], highlights: [node.val] });
-        inorder(node.right, visited);
+        inorderList(node.left, result);
+        result.push(node.val);
+        inorderList(node.right, result);
     }
-    inorder(root, []);
+    const sorted = [];
+    inorderList(root, sorted);
+
+    // For each value, animate the search from root to that value
+    const steps = [];
+    const visited = [];
+    sorted.forEach(val => {
+        let curr = root;
+        const searchPath = [];
+        while (curr) {
+            searchPath.push(curr.val);
+            steps.push({ array: [...visited], highlights: [curr.val], traversal: 'search', target: val });
+            if (curr.val === val) break;
+            if (compare(curr.val, val)) curr = curr.left;
+            else curr = curr.right;
+        }
+        visited.push(val);
+        steps.push({ array: [...visited], highlights: [val], traversal: 'visit', target: val });
+    });
     return steps.length ? steps : [{ array: arr, highlights: [] }];
 }
 
@@ -508,33 +525,20 @@ function AlgorithmVisualizer() {
  * @param {Array} arr Input array
  * @returns {Array} Step objects representing visited nodes
  */
-function getBSTSteps(arr) {
-    function TreeNode(val) {
-        this.val = val;
-        this.left = null;
-        this.right = null;
-    };
-    function insert(root, val) {
-        if (!root) return new TreeNode(val);
-        if (compare(root.val, val)) root.left = insert(root.left, val);
-        else root.right = insert(root.right, val);
-        return root;
-    };
-    let root = null;
-    arr.forEach(val => {
-        root = insert(root, val);
-    });
-    setBstRoot(root);
-    const steps = [];
-    function inorder(node, visited) {
-        if (!node) return;
-        inorder(node.left, visited);
-        visited.push(node.val);
-        steps.push({ array: [...visited], highlights: [node.val] });
-        inorder(node.right, visited);
-    };
-    inorder(root, []);
-    return steps.length ? steps : [{ array: arr, highlights: [] }];
+function getBSTSearchSteps(root, value) {
+        const steps = [];
+        const path = [];
+        function search(node) {
+            if (!node) return;
+            path.push(node.val);
+            steps.push({ highlights: [node.val], path: [...path], found: node.val === value });
+            if (node.val === value) return;
+            if (compare(node.val, value)) search(node.left);
+            else search(node.right);
+        }
+        search(root);
+        return steps;
+    }
 
 /**
  * @function computeTreeLayout
@@ -681,27 +685,6 @@ function countNodes(node) {
 
 
 
-/**
- * @function getBSTSearchSteps
- * @description Records the path taken during BST search.
- * @param {Object} root BST root
- * @param {any} value Value to search for
- * @returns {Array} Array of visited node values
- */
-function getBSTSearchSteps(root, value) {
-        const steps = [];
-        function search(node) {
-            if (!node) return;
-            steps.push(node.val);
-            if (node.val === value) return;
-            if (compare(node.val, value)) search(node.left);
-            else search(node.right);
-        }
-        search(root);
-        return steps;
-    }
-}
-
     return (
         <main className="visualizer-container">
             <header className="visualizer-header">
@@ -754,7 +737,12 @@ function getBSTSearchSteps(root, value) {
                                     </div>
                                 ) : (
                                     <div>
-                                        <p>BST Inorder Traversal (step {step + 1} / {steps.length || 1})</p>
+                                        <p>
+                                            BST Inorder Traversal (step {step + 1} / {steps.length || 1})<br />
+                                            <span style={{ fontStyle: 'italic', color: '#888' }}>
+                                                Traversal: {steps[step]?.traversal === 'enter' ? 'Entering node' : steps[step]?.traversal === 'visit' ? 'Visiting node (add to list)' : ''}
+                                            </span>
+                                        </p>
                                         <ul className="data-list">
                                             {(steps[step]?.array || data).map((num, idx) => (
                                                 <li key={idx} className="data-item">
@@ -766,7 +754,7 @@ function getBSTSearchSteps(root, value) {
                                             ))}
                                         </ul>
                                         <div style={{ marginTop: 24 }}>
-                                            <BSTSVG root={bstRoot} highlight={null} width={600} height={400} />
+                                            <BSTSVG root={bstRoot} highlight={steps[step]?.highlights?.[0] ?? null} width={600} height={400} />
                                         </div>
                                     </div>
                                 )}
