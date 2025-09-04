@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import './App.css';
 
+
+
 // Algorithm options for dropdown
 const algorithms = [
     { value: 'bubble', label: 'Bubble Sort' },
@@ -8,6 +10,8 @@ const algorithms = [
     { value: 'merge', label: 'Merge Sort' },
     { value: 'bst', label: 'Binary Search Tree' }
 ];
+
+
 
 /**
  * @function getMergeSortStepsWithPreview
@@ -61,6 +65,8 @@ function getMergeSortStepsWithPreview(arr) {
     return steps;
 }
 
+
+
 // Data type options for dropdown
 const dataTypes = [
     { value: 'int', label: 'Integer' },
@@ -68,6 +74,8 @@ const dataTypes = [
     { value: 'string', label: 'String' },
     { value: 'char', label: 'Char' },
 ];
+
+
 
 /**
  * @function compare
@@ -83,6 +91,8 @@ function compare(a, b) {
     }
     return String(a) > String(b);
 }
+
+
 
 /**
  * @function getBubbleSortStepsWithPreview
@@ -107,6 +117,8 @@ function getBubbleSortStepsWithPreview(arr) {
     }
     return steps;
 }
+
+
 
 /**
  * @function getQuickSortStepsWithPreview
@@ -144,7 +156,7 @@ function getQuickSortStepsWithPreview(arr) {
                 [a[i], a[j]] = [a[j], a[i]];
                 steps.push({ array: [...a], highlights: [], preview: false });
             }
-            // No preview for comparisons where no swap occurs
+            // No preview for comparisons where no swap of elements occurs
         }
         // Final pivot swap preview (if needed)
         if (i + 1 !== high && a[i + 1] !== a[high]) {
@@ -168,6 +180,7 @@ function getQuickSortStepsWithPreview(arr) {
 }
 
 
+
 // Build BST and generate traversal steps
 function getBSTSteps(arr, setBstRoot) {
     // BST node constructor
@@ -187,7 +200,6 @@ function getBSTSteps(arr, setBstRoot) {
         root = insert(root, val);
     });
     setBstRoot(root);
-    // ...existing code...
     // Get sorted values by inorder traversal
     function inorderList(node, result) {
         if (!node) return;
@@ -197,8 +209,7 @@ function getBSTSteps(arr, setBstRoot) {
     }
     const sorted = [];
     inorderList(root, sorted);
-
-    // For each value, animate the search from root to that value
+    // For each value in sorted order, highlight the root node and then move down the tree, highlighting each node along the way until the desired value is reached, then add that value to the list.
     const steps = [];
     const visited = [];
     sorted.forEach(val => {
@@ -216,6 +227,8 @@ function getBSTSteps(arr, setBstRoot) {
     });
     return steps.length ? steps : [{ array: arr, highlights: [] }];
 }
+
+
 
 /**
  * @component AlgorithmVisualizer
@@ -265,6 +278,8 @@ function AlgorithmVisualizer() {
         setSearchSteps([]);
     };
 
+
+
     // Run selected algorithm and generate steps
     const runAlgorithm = () => {
         let generatedSteps = [];
@@ -281,6 +296,8 @@ function AlgorithmVisualizer() {
         setSearchSteps([]);
     };
 
+
+
     // Go to next visualization step
     const nextStep = () => {
         if (step < steps.length - 1) setStep(step + 1);
@@ -293,6 +310,8 @@ function AlgorithmVisualizer() {
     const handleSearchValueChange = (e) => {
         setSearchValue(e.target.value);
     };
+
+
 
     /**
      * @function getBSTSearchSteps
@@ -315,6 +334,8 @@ function AlgorithmVisualizer() {
         return steps;
     };
 
+
+
     // Run BST search and update steps
     const runBSTSearch = () => {
         let val = searchValue;
@@ -325,6 +346,8 @@ function AlgorithmVisualizer() {
         setSearchSteps(path);
         setStep(0);
     };
+
+
 
     // Compute layout positions for BST SVG rendering
     function computeTreeLayout(root, width, height, nodeRadius) {
@@ -378,6 +401,8 @@ function AlgorithmVisualizer() {
         });
         return layout;
     };
+
+
 
     // SVG component for rendering BST
     function BSTSVG({ root, highlight, width = 600, height = 400 }) {
@@ -448,6 +473,8 @@ function AlgorithmVisualizer() {
         return 1 + countNodes(node.left) + countNodes(node.right);
     }
 
+
+
     /**
      * @function renderArrows
      * @description Renders directional arrows for swap previews in sorting visualizations.
@@ -477,6 +504,8 @@ function AlgorithmVisualizer() {
         }
         return null;
     };
+
+
 
     /**
      * @function renderBST
@@ -539,6 +568,8 @@ function getBSTSearchSteps(root, value) {
         search(root);
         return steps;
     }
+
+
 
 /**
  * @function computeTreeLayout
