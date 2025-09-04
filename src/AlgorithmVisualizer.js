@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
 import './App.css';
 
-
-
 // Algorithm options for dropdown
 const algorithms = [
     { value: 'bubble', label: 'Bubble Sort' },
@@ -10,8 +8,6 @@ const algorithms = [
     { value: 'merge', label: 'Merge Sort' },
     { value: 'bst', label: 'Binary Search Tree' }
 ];
-
-
 
 /**
  * @function getMergeSortStepsWithPreview
