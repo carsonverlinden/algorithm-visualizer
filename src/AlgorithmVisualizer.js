@@ -6,8 +6,93 @@ const algorithms = [
     { value: 'bubble', label: 'Bubble Sort' },
     { value: 'quick', label: 'Quick Sort' },
     { value: 'merge', label: 'Merge Sort' },
+    { value: 'timsort', label: 'Timsort' },
     { value: 'bst', label: 'Binary Search Tree' }
 ];
+/**
+ * @function getTimSortStepsWithPreview
+ * @description Generates step-by-step states for Timsort algorithm with preview steps before each move/merge.
+ * @param {Array} arr Array to sort
+ * @returns {Array} Step objects showing array state and moves
+ */
+function getTimSortStepsWithPreview(arr) {
+    const steps = [];
+    const a = [...arr];
+    steps.push({ array: [...a], highlights: [] });
+    const RUN = 32;
+
+    // Insertion sort for small runs
+    function insertionSort(left, right) {
+        for (let i = left + 1; i <= right; i++) {
+            let temp = a[i];
+            let j = i - 1;
+            // Preview step: highlight the element to be inserted
+            steps.push({ array: [...a], highlights: [i], preview: true, insertValue: temp, insertIndex: i });
+            while (j >= left && compare(a[j], temp)) {
+                // Preview step: show which value will be shifted, but preserve the value to be inserted
+                let previewArr = [...a];
+                previewArr[j + 1] = previewArr[j];
+                // Mark the original insert value and its intended position
+                steps.push({ array: previewArr, highlights: [j, j + 1], preview: true, insertValue: temp, insertIndex: j });
+                a[j + 1] = a[j];
+                steps.push({ array: [...a], highlights: [], preview: false });
+                j--;
+            }
+            a[j + 1] = temp;
+            steps.push({ array: [...a], highlights: [], preview: false });
+        }
+    }
+
+    // Merge function for merging sorted runs
+    function merge(l, m, r) {
+        let len1 = m - l + 1, len2 = r - m;
+        let left = [];
+        let right = [];
+        for (let i = 0; i < len1; i++) left[i] = a[l + i];
+        for (let i = 0; i < len2; i++) right[i] = a[m + 1 + i];
+        let i = 0, j = 0, k = l;
+        // Preview step: highlight the range to be merged
+        let mergeIndices = [];
+        for (let idx = l; idx <= r; idx++) mergeIndices.push(idx);
+        steps.push({ array: [...a], highlights: mergeIndices, preview: true });
+        while (i < len1 && j < len2) {
+            if (compare(left[i], right[j])) {
+                a[k] = right[j];
+                j++;
+            } else {
+                a[k] = left[i];
+                i++;
+            }
+            steps.push({ array: [...a], highlights: [], preview: false });
+            k++;
+        }
+        while (i < len1) {
+            a[k] = left[i];
+            i++; k++;
+            steps.push({ array: [...a], highlights: [], preview: false });
+        }
+        while (j < len2) {
+            a[k] = right[j];
+            j++; k++;
+            steps.push({ array: [...a], highlights: [], preview: false });
+        }
+    }
+
+    const n = a.length;
+    // Sort individual subarrays of size RUN
+    for (let i = 0; i < n; i += RUN) {
+        insertionSort(i, Math.min((i + RUN - 1), (n - 1)));
+    }
+    // Merge runs
+    for (let size = RUN; size < n; size = 2 * size) {
+        for (let left = 0; left < n; left += 2 * size) {
+            let mid = left + size - 1;
+            let right = Math.min((left + 2 * size - 1), (n - 1));
+            if (mid < right) merge(left, mid, right);
+        }
+    }
+    return steps;
+}
 
 /**
  * @function getMergeSortStepsWithPreview
@@ -285,6 +370,8 @@ function AlgorithmVisualizer() {
             generatedSteps = getQuickSortStepsWithPreview(data);
         } else if (selectedAlgorithm === 'merge') {
             generatedSteps = getMergeSortStepsWithPreview(data);
+        } else if (selectedAlgorithm === 'timsort') {
+            generatedSteps = getTimSortStepsWithPreview(data);
         } else if (selectedAlgorithm === 'bst') {
             generatedSteps = getBSTSteps(data, setBstRoot);
         }
@@ -796,6 +883,16 @@ function countNodes(node) {
                             const isPivot = steps[step]?.pivotIndex === idx;
                             const isHighlighted = steps[step]?.highlights?.includes(idx);
                             const highlightColor = '#6b6054';
+                            // For Timsort insertion preview: show insertValue at insertIndex
+                            let displayValue = num;
+                            if (
+                                steps[step]?.preview &&
+                                typeof steps[step]?.insertIndex === 'number' &&
+                                typeof steps[step]?.insertValue !== 'undefined' &&
+                                idx === steps[step].insertIndex
+                            ) {
+                                displayValue = steps[step].insertValue;
+                            }
                             return (
                                 <li key={idx} className="data-item" style={{
                                     position: 'relative',
@@ -808,7 +905,7 @@ function countNodes(node) {
                                     borderRadius: '4px',
                                     border: '1px solid #888'
                                 }}>
-                                    {String(num)}
+                                    {String(displayValue)}
                                     {/* Show per-element arrow for swaps in preview steps */}
                                     {steps[step]?.preview && steps[step]?.highlights?.length === 2 && steps[step]?.highlights?.includes(idx) &&
                                         renderArrows(idx, steps[step].highlights, step)
