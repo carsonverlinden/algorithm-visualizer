@@ -28,18 +28,30 @@ function getTimSortStepsWithPreview(arr) {
             let j = i - 1;
             // Preview step: highlight the element to be inserted
             steps.push({ array: [...a], highlights: [i], preview: true, insertValue: temp, insertIndex: i });
+            let shifted = false;
+            let currIdx = i;
             while (j >= left && compare(a[j], temp)) {
-                // Preview step: show which value will be shifted, but preserve the value to be inserted
+                // Preview step: show which value will be shifted
                 let previewArr = [...a];
                 previewArr[j + 1] = previewArr[j];
-                // Mark the original insert value and its intended position
-                steps.push({ array: previewArr, highlights: [j, j + 1], preview: true, insertValue: temp, insertIndex: j });
+                // Show the value to be inserted at its original position
+                steps.push({
+                    array: previewArr,
+                    highlights: [j, j + 1],
+                    preview: true,
+                    insertValue: temp,
+                    insertIndex: currIdx,
+                });
+                // Move step: actually perform the shift
                 a[j + 1] = a[j];
-                steps.push({ array: [...a], highlights: [], preview: false });
+                steps.push({ array: [...a], highlights: [j, j + 1], preview: false });
+                currIdx = j;
                 j--;
+                shifted = true;
             }
+            // Insert the value at its correct position
             a[j + 1] = temp;
-            steps.push({ array: [...a], highlights: [], preview: false });
+            steps.push({ array: [...a], highlights: [j + 1], preview: false });
         }
     }
 
@@ -883,15 +895,17 @@ function countNodes(node) {
                             const isPivot = steps[step]?.pivotIndex === idx;
                             const isHighlighted = steps[step]?.highlights?.includes(idx);
                             const highlightColor = '#6b6054';
-                            // For Timsort insertion preview: show insertValue at insertIndex
                             let displayValue = num;
+                            // For Timsort insertion preview: show insertValue at its original position, not at the shifted position
                             if (
                                 steps[step]?.preview &&
                                 typeof steps[step]?.insertIndex === 'number' &&
-                                typeof steps[step]?.insertValue !== 'undefined' &&
-                                idx === steps[step].insertIndex
+                                typeof steps[step]?.insertValue !== 'undefined'
                             ) {
-                                displayValue = steps[step].insertValue;
+                                // If this is the original position of the value being inserted, show insertValue
+                                if (idx === steps[step].insertIndex && steps[step].highlights && steps[step].highlights.length === 2 && idx !== steps[step].highlights[1]) {
+                                    displayValue = steps[step].insertValue;
+                                }
                             }
                             return (
                                 <li key={idx} className="data-item" style={{
